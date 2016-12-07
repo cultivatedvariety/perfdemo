@@ -14,21 +14,42 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
     private final E[] buffer;
     private final int mask;
 
-    // use arrays of size 16 (64 bytes) to avoid false sharing
-    private final AtomicLong[] tail = new AtomicLong[16];
-    private final long[] headCache = new long[16];
-    private final AtomicLong[] head = new AtomicLong[16];
-    private final long[] tailCache = new long[16];
-
-
     @SuppressWarnings("unchecked")
     public OneToOneConcurrentArrayCoherenceAwareQueue(final int size) {
         buffer = (E[]) new Object[size];
         mask = size - 1;
-        tail[0] = new AtomicLong(0);
-        head[0] = new AtomicLong(0);
-        headCache[0] = 0;
-        tailCache[0] = 0;
+        initialiseHeadAndTailToZero();
+    }
+
+    public boolean offer(final E e) {
+        //in a queue, append at tail
+        if (tail() - cachedHead() >= buffer.length) {
+            refreshCachedHead(); // perform a volatile read on the actual head to get the latest value
+            if (tail() - cachedHead() >= buffer.length){
+                //no space
+                return false;
+            }
+        }
+
+        int slot = (int) (tail() & mask);
+        buffer[slot] = e;
+        incrementTail();
+        return true;
+    }
+
+    public E poll() {
+        if (cachedTail() <= head()) {
+            refreshedCachedTail(); // perform a volatile read on tail to get the latest value
+            if (cachedTail() <= head()) {
+                //no space
+                return null;
+            }
+        }
+
+        int slot = (int) (head() & mask);
+        E val = buffer[slot];
+        incrementHead();
+        return val;
     }
 
     public boolean add(final E e) {
@@ -39,47 +60,36 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
         throw new IllegalStateException("Queue is full");
     }
 
-    public boolean offer(final E e) {
-        //in a queue, append at tail
-        if (tail[0].get() - headCache[0] >= buffer.length) {
-            headCache[0] = head[0].get();
-            if (tail[0].get() - headCache[0] >= buffer.length){
-                //no space
-                return false;
-            }
-        }
-
-        int slot = (int) (tail[0].get() & mask);
-        buffer[slot] = e;
-        tail[0].incrementAndGet();
-//        if (tail - headCache >= buffer.length) {
-//            headCache = head;
-//            if (tail - headCache >= buffer.length){
-//                //no space
-//                return false;
-//            }
-//        }
-//
-//        int slot = (int) (tail & mask);
-//        buffer[slot] = e;
-//        tail++;
-
-        return true;
+    private long tail() {
+        return tail[0].get();
     }
 
-    public E poll() {
-        if (tailCache[0] <= head[0].get()) {
-            tailCache[0] = tail[0].get(); // force a volatile read
-            if (tailCache[0] <= head[0].get()) {
-                //no space
-                return null;
-            }
-        }
+    private long cachedTail() {
+        return tailCache[0];
+    }
 
-        int slot = (int) (head[0].get() & mask);
-        E val = buffer[slot];
-        head[0].incrementAndGet();
-        return val;
+    private void refreshedCachedTail() {
+        tailCache[0] = tail(); // force a volatile read
+    }
+
+    private void incrementTail() {
+        tail[0].lazySet(tail() + 1);
+    }
+
+    private long head() {
+        return head[0].get();
+    }
+
+    private long cachedHead() {
+        return headCache[0];
+    }
+
+    private void refreshCachedHead() {
+        headCache[0] = head();
+    }
+
+    private void incrementHead() {
+        head[0].lazySet(head() + 1);
     }
 
     public E remove() {
@@ -101,18 +111,18 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
     }
 
     public E peek() {
-        return buffer[(int) (head[0].get() % buffer.length)];
+        return buffer[(int) (head() % buffer.length)];
     }
 
     public int size() {
         long currentHeadBefore;
         long currentTail;
-        long currentHeadAfter = head[0].get();
+        long currentHeadAfter = head();
 
         do {
             currentHeadBefore = currentHeadAfter;
-            currentTail = tail[0].get();
-            currentHeadAfter = head[0].get();
+            currentTail = tail();
+            currentHeadAfter = head();
 
         }
         while (currentHeadAfter != currentHeadBefore);
@@ -121,7 +131,7 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
     }
 
     public boolean isEmpty() {
-        return tail == head;
+        return tail() == head();
     }
 
     public boolean contains(final Object o) {
@@ -129,7 +139,7 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
             return false;
         }
 
-        for (long i = head[0].get(), limit = tail[0].get(); i < limit; i++) {
+        for (long i = head(), limit = tail(); i < limit; i++) {
             final E e = buffer[(int) (i % buffer.length)];
             if (o.equals(e)) {
                 return true;
@@ -184,5 +194,19 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
     public void clear() {
         throw new UnsupportedOperationException();
     }
+
+    private void initialiseHeadAndTailToZero() {
+        tail[0] = new AtomicLong(0);
+        head[0] = new AtomicLong(0);
+        headCache[0] = 0;
+        tailCache[0] = 0;
+    }
+
+    // use arrays of size 16 (64 bytes) to avoid false sharing
+    private final AtomicLong[] tail = new AtomicLong[16];
+    private final long[] headCache = new long[16];
+    private final AtomicLong[] head = new AtomicLong[16];
+    private final long[] tailCache = new long[16];
+
 }
 
