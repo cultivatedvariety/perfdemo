@@ -1,0 +1,18 @@
+"C:\Program Files\Java\jdk1.8.0_102\bin\java" -Didea.launcher.port=7537 "-Didea.launcher.bin.path=C:\Program Files (x86)\JetBrains\IntelliJ IDEA 2016.2.3\bin" -Dfile.encoding=UTF-8 -classpath "C:\Program Files\Java\jdk1.8.0_102\jre\lib\charsets.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\deploy.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\access-bridge-64.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\cldrdata.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\dnsns.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\jaccess.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\jfxrt.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\localedata.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\nashorn.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\sunec.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\sunjce_provider.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\sunmscapi.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\sunpkcs11.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\ext\zipfs.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\javaws.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\jce.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\jfr.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\jfxswt.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\jsse.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\management-agent.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\plugin.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\resources.jar;C:\Program Files\Java\jdk1.8.0_102\jre\lib\rt.jar;C:\Users\robch\IdeaProjects\perfdemo\target\test-classes;C:\Users\robch\IdeaProjects\perfdemo\target\classes;C:\Program Files (x86)\JetBrains\IntelliJ IDEA 2016.2.3\lib\idea_rt.jar" com.intellij.rt.execution.application.AppMain com.cultivatedvarity.perfdemo.OneToOneQueuePerfTest
+0 - ops/sec=30,812,902 - OneToOneQueuePerfTest
+1 - ops/sec=21,148,514 - OneToOneQueuePerfTest
+2 - ops/sec=25,866,282 - OneToOneQueuePerfTest
+3 - ops/sec=18,642,326 - OneToOneQueuePerfTest
+4 - ops/sec=19,827,339 - OneToOneQueuePerfTest
+5 - ops/sec=17,607,896 - OneToOneQueuePerfTest
+6 - ops/sec=18,200,289 - OneToOneQueuePerfTest
+7 - ops/sec=19,099,321 - OneToOneQueuePerfTest
+8 - ops/sec=24,652,850 - OneToOneQueuePerfTest
+9 - ops/sec=17,766,305 - OneToOneQueuePerfTest
+10 - ops/sec=22,978,606 - OneToOneQueuePerfTest
+11 - ops/sec=22,462,083 - OneToOneQueuePerfTest
+12 - ops/sec=17,822,452 - OneToOneQueuePerfTest
+13 - ops/sec=24,682,551 - OneToOneQueuePerfTest
+14 - ops/sec=18,624,832 - OneToOneQueuePerfTest
+
+Process finished with exit code 1
