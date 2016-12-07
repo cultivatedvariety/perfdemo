@@ -22,9 +22,6 @@ public class OneToOneQueuePerfTest
     private void shouldPerformanceTestOfferAndPoll()
             throws Exception
     {
-        //final Queue<Integer> queue = new java.util.concurrent.ConcurrentLinkedQueue<Integer>();
-        //final Queue<Integer> queue = new java.util.concurrent.LinkedBlockingQueue<Integer>(QUEUE_SIZE);
-        //final Queue<Integer> queue = new java.util.concurrent.ArrayBlockingQueue<Integer>(QUEUE_SIZE);
         final Queue<Integer> queue = new OneToOneConcurrentArrayQueue<Integer>(QUEUE_SIZE);
 
         for (int i  = 0; i < 5; i++)

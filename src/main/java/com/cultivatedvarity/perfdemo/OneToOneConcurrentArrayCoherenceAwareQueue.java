@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Queue;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by robch on 07/12/2016.
@@ -13,16 +14,21 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
     private final E[] buffer;
     private final int mask;
 
-    private volatile long tail = 0;
-    private long headCache = 0;
-    private volatile long head = 0;
-    private long tailCache = 0;
+    // use arrays of size 16 (64 bytes) to avoid false sharing
+    private final AtomicLong[] tail = new AtomicLong[16];
+    private final long[] headCache = new long[16];
+    private final AtomicLong[] head = new AtomicLong[16];
+    private final long[] tailCache = new long[16];
 
 
     @SuppressWarnings("unchecked")
     public OneToOneConcurrentArrayCoherenceAwareQueue(final int size) {
         buffer = (E[]) new Object[size];
         mask = size - 1;
+        tail[0] = new AtomicLong(0);
+        head[0] = new AtomicLong(0);
+        headCache[0] = 0;
+        tailCache[0] = 0;
     }
 
     public boolean add(final E e) {
@@ -35,33 +41,44 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
 
     public boolean offer(final E e) {
         //in a queue, append at tail
-        if (tail - headCache >= buffer.length) {
-            headCache = head;
-            if (tail - headCache >= buffer.length){
+        if (tail[0].get() - headCache[0] >= buffer.length) {
+            headCache[0] = head[0].get();
+            if (tail[0].get() - headCache[0] >= buffer.length){
                 //no space
                 return false;
             }
         }
 
-        int slot = (int) (tail & mask);
+        int slot = (int) (tail[0].get() & mask);
         buffer[slot] = e;
-        tail++;
+        tail[0].incrementAndGet();
+//        if (tail - headCache >= buffer.length) {
+//            headCache = head;
+//            if (tail - headCache >= buffer.length){
+//                //no space
+//                return false;
+//            }
+//        }
+//
+//        int slot = (int) (tail & mask);
+//        buffer[slot] = e;
+//        tail++;
 
         return true;
     }
 
     public E poll() {
-        if (tailCache <= head) {
-            tailCache = tail; // force a volatile read
-            if (tailCache <= head) {
+        if (tailCache[0] <= head[0].get()) {
+            tailCache[0] = tail[0].get(); // force a volatile read
+            if (tailCache[0] <= head[0].get()) {
                 //no space
                 return null;
             }
-        } 
+        }
 
-        int slot = (int) (head & mask);
+        int slot = (int) (head[0].get() & mask);
         E val = buffer[slot];
-        head++;
+        head[0].incrementAndGet();
         return val;
     }
 
@@ -84,18 +101,18 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
     }
 
     public E peek() {
-        return buffer[(int) (head % buffer.length)];
+        return buffer[(int) (head[0].get() % buffer.length)];
     }
 
     public int size() {
         long currentHeadBefore;
         long currentTail;
-        long currentHeadAfter = head;
+        long currentHeadAfter = head[0].get();
 
         do {
             currentHeadBefore = currentHeadAfter;
-            currentTail = tail;
-            currentHeadAfter = head;
+            currentTail = tail[0].get();
+            currentHeadAfter = head[0].get();
 
         }
         while (currentHeadAfter != currentHeadBefore);
@@ -112,7 +129,7 @@ public class OneToOneConcurrentArrayCoherenceAwareQueue<E> implements Queue<E> {
             return false;
         }
 
-        for (long i = head, limit = tail; i < limit; i++) {
+        for (long i = head[0].get(), limit = tail[0].get(); i < limit; i++) {
             final E e = buffer[(int) (i % buffer.length)];
             if (o.equals(e)) {
                 return true;
